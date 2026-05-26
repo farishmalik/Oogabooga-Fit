@@ -3051,118 +3051,15 @@
           <div id="st-cal-auto-info" class="st-cal-auto-info"></div>
         </div>
 
-        <!-- ── Google Sheets Sync ── -->
+        <!-- ── Cloud Sync status (no user config needed) ── -->
         <div class="st-section-label">Cloud Sync</div>
         <div class="st-card">
-          <!-- sync status indicator -->
-          <div class="st-action-row" style="margin-bottom:12px">
+          <div class="st-action-row">
             <div>
               <div class="st-action-title">Sheet Database</div>
-              <div class="st-action-sub"><a href="https://docs.google.com/spreadsheets/d/1Dr-Pi9M4UMfvfMSHD-8ZU5CH_gEGhZhA4wVn40HUYYc" target="_blank" style="color:var(--accent-dim)">View your Google Sheet ↗</a></div>
+              <div class="st-action-sub">Data syncs automatically in the background</div>
             </div>
-            <div id="st-sync-status" class="st-sync-status"></div>
-          </div>
-          <div id="st-sync-banner" style="display:none;background:color-mix(in srgb,var(--red) 12%,var(--bg-card));border:1px solid var(--red);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--accent-dim);font-family:var(--font-body);margin-bottom:12px">
-            ⚠ Write sync not configured — data is read-only from sheet. Deploy the Apps Script below and paste the URL to enable saving.
-          </div>
-          <div class="st-field-row">
-            <label class="st-label">Apps Script URL <span style="font-weight:400;text-transform:none">(one-time setup)</span></label>
-            <input id="st-sheets-url" class="st-input" type="url"
-              placeholder="https://script.google.com/macros/s/…/exec"/>
-          </div>
-          <div class="st-sheets-actions">
-            <button class="st-btn-outline" id="st-test-sync-btn">Test</button>
-          </div>
-          <button class="st-save-btn" id="st-save-sheets-btn">Save URL</button>
-
-          <!-- setup instructions -->
-          <div class="st-instructions">
-            <div class="st-instr-title">One-Time Setup</div>
-            <ol class="st-instr-list">
-              <li>Open <a href="https://docs.google.com/spreadsheets/d/1Dr-Pi9M4UMfvfMSHD-8ZU5CH_gEGhZhA4wVn40HUYYc" target="_blank" style="color:var(--accent-dim)">your Google Sheet ↗</a></li>
-              <li>Click <strong>Extensions → Apps Script</strong></li>
-              <li>Delete all existing code, paste the script below, hit Save</li>
-              <li><strong>Deploy → New Deployment → Web App</strong><br>Execute as: <em>Me</em> · Access: <em>Anyone</em> → Deploy</li>
-              <li>Copy the URL → paste above → Save URL</li>
-              <li>Done. Every profile auto-gets its own tab. New devices sign in with PIN and data syncs automatically.</li>
-            </ol>
-            <div class="st-code-block-wrap">
-              <div class="st-code-block-header">
-                <span>Apps Script</span>
-                <button class="st-copy-btn" id="st-copy-script-btn">Copy</button>
-              </div>
-              <pre class="st-code-block" id="st-apps-script-code">/* ═══════════════════════════════════════════
-   Oogabooga Fit — Apps Script backend
-   Sheet: 1Dr-Pi9M4UMfvfMSHD-8ZU5CH_gEGhZhA4wVn40HUYYc
-
-   Sheet structure:
-     Tab "profiles"  → id | name | pinHash | createdAt
-     Tab "{profileId}" → updatedAt | data (JSON blob, row 2)
-
-   Each user profile gets its own tab automatically.
-═══════════════════════════════════════════ */
-
-var SS = SpreadsheetApp.openById('1Dr-Pi9M4UMfvfMSHD-8ZU5CH_gEGhZhA4wVn40HUYYc');
-
-function doGet(e) {
-  return jsonOut({ ok: true, status: 'Oogabooga Fit backend running' });
-}
-
-function doPost(e) {
-  try {
-    var data   = JSON.parse(e.postData.contents);
-    var action = data.action || '';
-
-    if (action === 'registerProfile') {
-      /* Add to profiles registry tab */
-      var reg = getOrCreateTab('profiles', ['id','name','pinHash','createdAt']);
-      /* Check not already registered */
-      var existing = reg.getDataRange().getValues();
-      for (var i = 1; i < existing.length; i++) {
-        if (existing[i][0] === data.id) {
-          return jsonOut({ ok: true, note: 'already exists' });
-        }
-      }
-      reg.appendRow([data.id, data.name, data.pinHash, data.createdAt]);
-      /* Create the profile's own data tab */
-      getOrCreateTab(data.id, ['updatedAt','data']);
-
-    } else if (action === 'saveProfileData') {
-      /* Write/overwrite row 2 of the profile's own tab */
-      var tab = getOrCreateTab(data.id, ['updatedAt','data']);
-      var numRows = tab.getLastRow();
-      if (numRows <= 1) {
-        tab.appendRow([data.updatedAt, data.data]);
-      } else {
-        tab.getRange(2, 1, 1, 2).setValues([[data.updatedAt, data.data]]);
-      }
-    }
-
-    return jsonOut({ ok: true });
-  } catch(err) {
-    return jsonOut({ ok: false, error: err.message });
-  }
-}
-
-function getOrCreateTab(name, headers) {
-  var tab = SS.getSheetByName(name);
-  if (!tab) {
-    tab = SS.insertSheet(name);
-    tab.appendRow(headers);
-    tab.setFrozenRows(1);
-    tab.getRange(1, 1, 1, headers.length)
-       .setFontWeight('bold')
-       .setBackground('#1a1a1a')
-       .setFontColor('#ffffff');
-  }
-  return tab;
-}
-
-function jsonOut(data) {
-  return ContentService.createTextOutput(JSON.stringify(data))
-    .setMimeType(ContentService.MimeType.JSON);
-}</pre>
-            </div>
+            <div id="st-sync-status" class="st-sync-status st-sync-ok">✓ Active</div>
           </div>
         </div>
 
@@ -5854,20 +5751,9 @@ function jsonOut(data) {
       };
       document.getElementById('st-save-cal-btn').onclick = saveCalOverride;
 
-      /* sheets — show banner if write URL not configured */
-      const url        = load(ST_KEYS.sheetsUrl, '');
-      const writeReady = !!(APPS_SCRIPT_URL || url);
-      document.getElementById('st-sheets-url').value = APPS_SCRIPT_URL || url;
-      document.getElementById('st-sheets-url').disabled = !!APPS_SCRIPT_URL; /* hardcoded = read-only */
-      document.getElementById('st-sync-banner').style.display = writeReady ? 'none' : 'block';
-      document.getElementById('st-sync-status').className = 'st-sync-status ' + (writeReady ? 'st-sync-ok' : 'st-sync-fail');
-      document.getElementById('st-sync-status').textContent  = writeReady ? '✓ Syncing' : '✗ Not set up';
-      if (APPS_SCRIPT_URL) {
-        document.getElementById('st-save-sheets-btn').style.display = 'none'; /* hardcoded, no need to save */
-      }
-      document.getElementById('st-save-sheets-btn').onclick = saveSheetsUrl;
-      document.getElementById('st-test-sync-btn').onclick   = testSheetsConnection;
-      document.getElementById('st-copy-script-btn').onclick = copyAppsScript;
+      /* sync status pill — always active since URL is hardcoded */
+      const syncEl = document.getElementById('st-sync-status');
+      if (syncEl) { syncEl.className = 'st-sync-status st-sync-ok'; syncEl.textContent = '✓ Active'; }
 
       /* export */
       document.getElementById('st-export-btn').onclick = exportCSV;
@@ -5939,55 +5825,8 @@ function jsonOut(data) {
       showStToast('Calorie target set to ' + val + ' kcal ✓');
     }
 
-    /* ── google sheets ── */
-    function saveSheetsUrl() {
-      const url = document.getElementById('st-sheets-url').value.trim();
-      save(ST_KEYS.sheetsUrl, url);
-      showStToast(url ? 'URL saved ✓' : 'URL cleared');
-    }
-
-    function testSheetsConnection() {
-      const url = getWriteUrl();
-      const el  = document.getElementById('st-sync-status');
-      if (!url) { el.className = 'st-sync-status st-sync-fail'; el.textContent = '✗ No URL set'; return; }
-      el.className = 'st-sync-status st-sync-busy'; el.textContent = 'Testing…';
-      fetch(url, { method: 'POST', mode: 'no-cors', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'ping', ts: Date.now() }) })
-        .then(() => { el.className = 'st-sync-status st-sync-ok';   el.textContent = '✓ Connected'; })
-        .catch(() => { el.className = 'st-sync-status st-sync-fail'; el.textContent = '✗ Failed — check deployment'; });
-    }
-
-    /* ── silent background sync (called after logging food / weight / workout) ── */
-    function sheetsPost(url, type, payload) {
-      return fetch(url, {
-        method:  'POST',
-        mode:    'no-cors',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ type, payload }),
-      });
-    }
-
-    /* Legacy per-event sync — now we sync full blobs via saveProfileSnapshot instead */
-    function syncToSheets(type, payload) {
-      /* Snapshot sync handles everything; individual event sync is a no-op */
-    }
-
-    /* ── copy apps script code ── */
-    function copyAppsScript() {
-      const code = document.getElementById('st-apps-script-code').textContent;
-      navigator.clipboard?.writeText(code).then(() => {
-        const btn = document.getElementById('st-copy-script-btn');
-        btn.textContent = 'Copied!';
-        setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
-      }).catch(() => {
-        /* fallback: select text */
-        const el = document.getElementById('st-apps-script-code');
-        const range = document.createRange();
-        range.selectNodeContents(el);
-        window.getSelection().removeAllRanges();
-        window.getSelection().addRange(range);
-      });
-    }
+    /* sync is fully automatic — no user-facing config functions needed */
+    function syncToSheets() {} /* no-op kept for safety */
 
     /* ── export CSV ── */
     function exportCSV() {
