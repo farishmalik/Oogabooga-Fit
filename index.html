@@ -2139,8 +2139,12 @@
     }
 
     /* ─────────── SETTINGS SCREEN ─────────── */
+    #page-settings {
+      padding-left: 0;
+      padding-right: 0;
+    }
     .st-section-label {
-      padding: 16px 20px 8px;
+      padding: 16px 16px 8px;
       font-size: 11px;
       font-weight: 600;
       text-transform: uppercase;
@@ -2148,11 +2152,12 @@
       color: var(--muted);
     }
     .st-card {
-      margin: 0 20px 12px;
+      margin: 0 12px 12px;
       background: var(--bg-card);
       border: 1px solid var(--border);
       border-radius: var(--r);
-      padding: 16px;
+      padding: 14px;
+      overflow: hidden;
     }
     .st-card--danger {
       border-color: rgba(191,125,125,0.3);
@@ -2174,6 +2179,8 @@
     }
     .st-input {
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
       background: var(--bg-raised);
       border: 1px solid var(--border);
       border-radius: 10px;
@@ -2189,12 +2196,15 @@
     .st-input::placeholder { color: var(--muted); }
     .st-select {
       width: 100%;
+      max-width: 100%;
+      min-width: 0;
       -webkit-appearance: none;
       background: var(--bg-raised);
       border: 1px solid var(--border);
       border-radius: 10px;
       padding: 10px 12px;
-      text-align: left;
+      color: var(--accent);
+      font-family: var(--font-body);
       font-size: 15px;
     }
     .st-calc-preview {
@@ -2361,8 +2371,9 @@
       justify-content: space-between;
       gap: 12px;
     }
-    .st-action-title { font-size: 14px; color: var(--accent); }
-    .st-action-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .st-action-row > div:first-child { min-width: 0; flex: 1; }
+    .st-action-title { font-size: 14px; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .st-action-sub   { font-size: 12px; color: var(--muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .st-btn-danger {
       background: rgba(191,125,125,0.12);
       border: 1px solid rgba(191,125,125,0.4);
