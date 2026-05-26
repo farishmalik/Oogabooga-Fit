@@ -2425,19 +2425,7 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Dashboard stagger: nth-child delays on direct children of #page-home */
-    #page-home > *:nth-child(1)  { animation-delay: 0.00s; }
-    #page-home > *:nth-child(2)  { animation-delay: 0.04s; }
-    #page-home > *:nth-child(3)  { animation-delay: 0.07s; }
-    #page-home > *:nth-child(4)  { animation-delay: 0.10s; }
-    #page-home > *:nth-child(5)  { animation-delay: 0.13s; }
-    #page-home > *:nth-child(6)  { animation-delay: 0.16s; }
-    #page-home > *:nth-child(7)  { animation-delay: 0.19s; }
-    #page-home > *:nth-child(8)  { animation-delay: 0.22s; }
-    #page-home > *:nth-child(9)  { animation-delay: 0.25s; }
-    #page-home > *:nth-child(10) { animation-delay: 0.28s; }
-    #page-home > * { opacity: 0; animation: cardFadeUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) both; }
-    #page-home.active > * { /* cards only animate when page is active */ }
+    /* stagger removed — caused opacity:0 freeze on iOS when rendered while hidden */
     @keyframes cardFadeUp {
       from { opacity: 0; transform: translateY(14px); }
       to   { opacity: 1; transform: translateY(0); }
@@ -3953,7 +3941,17 @@
 
     function navigateTo(page, mealKey) {
       navBtns.forEach(b => b.classList.toggle('active', b.dataset.page === page));
-      pages.forEach(p => p.classList.toggle('active', p.id === 'page-' + page));
+      pages.forEach(p => {
+        const isTarget = p.id === 'page-' + page;
+        if (isTarget) {
+          /* force animation restart by removing, reflowing, re-adding */
+          p.classList.remove('active');
+          void p.offsetWidth;
+          p.classList.add('active');
+        } else {
+          p.classList.remove('active');
+        }
+      });
       headerTitle.textContent = titles[page] || '';
       document.getElementById('content').scrollTop = 0;
       if (page === 'home')     renderDashboard();
